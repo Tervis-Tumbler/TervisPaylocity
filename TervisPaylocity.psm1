@@ -13,7 +13,7 @@ function Get-PathToPaylocityDataExport {
 
 function Set-PathToPaylocityDataExport {
     param (
-        $PathToPaylocityDataExport
+        [Parameter(Mandatory)][String]$PathToPaylocityDataExport
     )
     [Environment]::SetEnvironmentVariable("PathToPaylocityDataExport", $PathToPaylocityDataExport, "User")
 }
