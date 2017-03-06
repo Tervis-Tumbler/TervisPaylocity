@@ -44,6 +44,7 @@ function Get-PaylocityEmployees {
                 Surname = $Detail.col2 | ConvertTo-TitleCase
                 GivenName = $Detail.col1 | ConvertTo-TitleCase
                 EmployeeID = $Detail.col0
+                TerminationDate = if ($Detail.col11) {Get-Date $Detail.col11}
             }
         }
     
