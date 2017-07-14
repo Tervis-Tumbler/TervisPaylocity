@@ -139,3 +139,25 @@ filter Add-PaylocityReportDetailsCustomMembers {
     $_ | Add-Member -MemberType ScriptProperty -Name "GivenName" -Value {$This.col1 | ConvertTo-TitleCase}
     $_ | Add-Member -MemberType ScriptProperty -Name "EmployeeID" -Value {$This.col0}
 }
+
+function Get-AllActiveEmployeesWithTheirTervisEmailAddress {
+    $ActiveEmployees = Get-PaylocityEmployees -Status A    
+    $ADusersOfActivePaylocityUsers = Get-PaylocityADUser -Status A
+
+    Import-TervisMSOnlinePSSession
+    $Mailboxes = Get-O365Mailbox
+    
+    $ADUsersWithMailboxes = $ADusersOfActivePaylocityUsers |
+    where UserPrincipalName -In $Mailboxes.UserPrincipalName
+
+    $ActiveEmployees | Add-Member -MemberType ScriptProperty -Name EmailAddress -Force -Value {
+        $ADUsersWithMailboxes | 
+        Where-Object EmployeeID -eq $This.EmployeeID |
+        Select-Object -ExpandProperty UserPrincipalName
+    }
+
+    $ActiveEmployees | 
+    Select-Object -Property SurName, GivenName, EmailAddress |
+    Sort-Object -Property Surname |
+    Export-Csv -Path $Home\ActiveEmployeesAndTheirWorkEmails.csv -NoTypeInformation
+}
