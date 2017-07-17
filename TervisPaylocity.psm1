@@ -157,7 +157,7 @@ function Get-AllActiveEmployeesWithTheirTervisEmailAddress {
     }
 
     $ActiveEmployees | 
-    Select-Object -Property SurName, GivenName, EmailAddress |
+    Select-Object -Property SurName, GivenName, EmailAddress, DepartmentName |
     Sort-Object -Property Surname |
     Export-Csv -Path $Home\ActiveEmployeesAndTheirWorkEmails.csv -NoTypeInformation
 }
