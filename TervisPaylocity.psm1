@@ -144,7 +144,7 @@ function Get-AllActiveEmployeesWithTheirTervisEmailAddress {
     $ActiveEmployees = Get-PaylocityEmployees -Status A    
     $ADusersOfActivePaylocityUsers = Get-PaylocityADUser -Status A
 
-    Import-TervisMSOnlinePSSession
+    Import-TervisOffice365ExchangePSSession
     $Mailboxes = Get-O365Mailbox
     
     $ADUsersWithMailboxes = $ADusersOfActivePaylocityUsers |
