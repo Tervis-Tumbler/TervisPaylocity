@@ -45,6 +45,9 @@ function Get-PaylocityEmployees {
                 GivenName = $Detail.col1 | ConvertTo-TitleCase
                 EmployeeID = $Detail.col0
                 TerminationDate = if ($Detail.col11) {Get-Date $Detail.col11}
+            } |
+            Add-Member -MemberType ScriptProperty -Name DepartmentNiceName -PassThru -Value {
+                Get-DepartmentNiceName -PaylocityDepartmentName $this.DepartmentName
             }
         }
     
