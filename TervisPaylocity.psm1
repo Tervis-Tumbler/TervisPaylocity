@@ -55,6 +55,33 @@ function Get-PaylocityEmployees {
     Where { -not $Status -or $_.Status -eq $Status }
 }
 
+function Get-PaylocityEmployeesEmployeeIDHashValue {
+    param (
+        $EmployeeID
+    )
+    
+    if (-not $Script:PaylocityEmployeesEmployeeIDHash) {
+        $PaylocityEmployeesEmployeeIDHash = @{}
+
+        Get-PaylocityEmployees |
+        ForEach-Object -Process {
+            $PaylocityEmployeesEmployeeIDHash.Add($_.EmployeeId , $_)
+        }
+
+        $Script:PaylocityEmployeesEmployeeIDHash = $PaylocityEmployeesEmployeeIDHash
+    }
+
+    $Script:PaylocityEmployeesEmployeeIDHash[$EmployeeID]
+}
+
+
+function Get-PaylocityEmployee {
+    param (
+        $EmployeeID        
+    )
+    Get-PaylocityEmployeesEmployeeIDHashValue -EmployeeID $EmployeeID    
+}
+
 Function Get-PaylocityDepartmentsWithNiceNamesJsonPath {
     Import-Clixml -Path $env:USERPROFILE\PaylocityDepartmentsWithNiceNamesJsonPath.xml
 }
