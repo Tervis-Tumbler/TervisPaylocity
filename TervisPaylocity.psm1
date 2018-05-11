@@ -1,4 +1,4 @@
-﻿Function Install-TervisPaylocity {
+﻿function Install-TervisPaylocity {
     param (
         [Parameter(Mandatory)]$PathToPaylocityDataExport,
         [Parameter(Mandatory)]$PaylocityDepartmentsWithNiceNamesJsonPath
@@ -48,6 +48,12 @@ function Get-PaylocityEmployees {
             } |
             Add-Member -MemberType ScriptProperty -Name DepartmentNiceName -PassThru -Value {
                 Get-DepartmentNiceName -PaylocityDepartmentName $this.DepartmentName
+            } |
+            Add-Member -Name DepartmentRoleSAMAccountName -MemberType ScriptProperty -PassThru -Force -Value {
+                "Role_Paylocity$($this.DepartmentCode)"
+            } |
+            Add-Member -Name DepartmentRoleName -MemberType ScriptProperty -PassThru -Force -Value {
+                "Role_Paylocity$($this.DepartmentName)"
             }
         }
     
@@ -85,18 +91,18 @@ function Get-PaylocityEmployee {
     Get-PaylocityEmployeesEmployeeIDHashValue -EmployeeID $EmployeeID    
 }
 
-Function Get-PaylocityDepartmentsWithNiceNamesJsonPath {
+function Get-PaylocityDepartmentsWithNiceNamesJsonPath {
     Import-Clixml -Path $env:USERPROFILE\PaylocityDepartmentsWithNiceNamesJsonPath.xml
 }
 
-Function Set-PaylocityDepartmentsWithNiceNamesJsonPath {
+function Set-PaylocityDepartmentsWithNiceNamesJsonPath {
     param (
         $PaylocityDepartmentsWithNiceNamesJsonPath
     )
     $PaylocityDepartmentsWithNiceNamesJsonPath | Export-Clixml -Path $env:USERPROFILE\PaylocityDepartmentsWithNiceNamesJsonPath.xml
 }
 
-Function Get-PaylocityDepartmentNamesAndCodes {
+function Get-PaylocityDepartment {
     $PaylocityRecords = Get-PaylocityEmployees
     $(
         $PaylocityRecords | 
@@ -104,21 +110,30 @@ Function Get-PaylocityDepartmentNamesAndCodes {
         select -ExpandProperty name
     ) | % {
         [pscustomobject][ordered]@{
-            DepartmentName = $($_ -split ", ")[0]
-            DepartmentCode = $($_ -split ", ")[1] 
+            Name = $($_ -split ", ")[0]
+            Code = $($_ -split ", ")[1] 
+        }|
+        Add-Member -MemberType ScriptProperty -Name NiceName -PassThru -Value {
+            Get-DepartmentNiceName -PaylocityDepartmentName $this.Name
+        } |
+        Add-Member -Name RoleSAMAccountName -MemberType ScriptProperty -PassThru -Force -Value {
+            "Role_Paylocity$($this.Code)"
+        } |
+        Add-Member -Name RoleName -MemberType ScriptProperty -PassThru -Force -Value {
+            "Role_Paylocity$($this.Name)"
         }
     }
 }
 
-Function Get-PaylocityDepartmentNamesAndCodesAsPowerShellPSCustomObjectText {
-    $PaylocityDepartments = Get-PaylocityDepartmentNamesAndCodes 
+function Get-PaylocityDepartmentNamesAndCodesAsPowerShellPSCustomObjectText {
+    $PaylocityDepartments = Get-PaylocityDepartment
     $PaylocityDepartments | 
     sort departmentname | % {
 @"
 [pscustomobject][ordered]@{
-    DepartmentName = "$($_.DepartmentName)"
-    DepartmentCode = "$($_.DepartmentCode)"
-    DepartmentNiceName = ""
+    Name = "$($_.DepartmentName)"
+    Code = "$($_.DepartmentCode)"
+    NiceName = ""
 },
 "@
     }
@@ -144,7 +159,7 @@ function Get-PaylocityEmployeesGroupedByDepartment {
     $PaylocityRecords| group departmentname | sort count -Descending
 }
 
-Function Get-TopLevelManager {
+function Get-TopLevelManager {
     param (
         $Employee,
         $EmployeesSubSet
