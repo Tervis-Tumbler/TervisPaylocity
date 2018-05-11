@@ -155,8 +155,8 @@ function Get-DepartmentNiceName {
 }
 
 function Get-PaylocityEmployeesGroupedByDepartment {
-    $PaylocityRecords = Get-PaylocityEmployees
-    $PaylocityRecords| group departmentname | sort count -Descending
+    $PaylocityRecords = Get-PaylocityEmployees -Status A
+    $PaylocityRecords| group departmentNicename | sort count -Descending
 }
 
 function Get-TopLevelManager {
