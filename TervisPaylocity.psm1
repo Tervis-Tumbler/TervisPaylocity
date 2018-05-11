@@ -1,21 +1,10 @@
-﻿function Install-TervisPaylocity {
-    param (
-        [Parameter(Mandatory)]$PathToPaylocityDataExport,
-        [Parameter(Mandatory)]$PaylocityDepartmentsWithNiceNamesJsonPath
-    )
-    Set-PathToPaylocityDataExport -PathToPaylocityDataExport $PathToPaylocityDataExport
-    Set-PaylocityDepartmentsWithNiceNamesJsonPath -PaylocityDepartmentsWithNiceNamesJsonPath $PaylocityDepartmentsWithNiceNamesJsonPath
-}
+﻿function Get-PaylocityDataExportPath {   
+    if (-not $Script:PaylocityDataExportPath) {
+        $Script:PaylocityDataExportPath = Get-PasswordstatePassword -ID 5416 |
+        Select-Object -ExpandProperty Password
+    }
 
-function Get-PathToPaylocityDataExport {   
-    $Env:PathToPaylocityDataExport
-}
-
-function Set-PathToPaylocityDataExport {
-    param (
-        [Parameter(Mandatory)][String]$PathToPaylocityDataExport
-    )
-    [Environment]::SetEnvironmentVariable("PathToPaylocityDataExport", $PathToPaylocityDataExport, "User")
+    $Script:PaylocityDataExportPath
 }
 
 function Get-PaylocityEmployees {
@@ -25,9 +14,9 @@ function Get-PaylocityEmployees {
     
     if (-not $Script:PaylocityEmployees) {
 
-        $PathToPaylocityDataExport = Get-PathToPaylocityDataExport
+        $PaylocityDataExportPath = Get-PaylocityDataExportPath
 
-        $MostRecentPaylocityDataExport = Get-ChildItem -File $PathToPaylocityDataExport | sort -Property CreationTime -Descending | select -First 1
+        $MostRecentPaylocityDataExport = Get-ChildItem -File $PaylocityDataExportPath | sort -Property CreationTime -Descending | select -First 1
         [xml]$Content = Get-Content $MostRecentPaylocityDataExport.FullName
         $Details = $Content.Report.CustomReportTable.Detail_Collection.Detail
 
@@ -91,17 +80,6 @@ function Get-PaylocityEmployee {
     Get-PaylocityEmployeesEmployeeIDHashValue -EmployeeID $EmployeeID    
 }
 
-function Get-PaylocityDepartmentsWithNiceNamesJsonPath {
-    Import-Clixml -Path $env:USERPROFILE\PaylocityDepartmentsWithNiceNamesJsonPath.xml
-}
-
-function Set-PaylocityDepartmentsWithNiceNamesJsonPath {
-    param (
-        $PaylocityDepartmentsWithNiceNamesJsonPath
-    )
-    $PaylocityDepartmentsWithNiceNamesJsonPath | Export-Clixml -Path $env:USERPROFILE\PaylocityDepartmentsWithNiceNamesJsonPath.xml
-}
-
 function Get-PaylocityDepartment {
     $PaylocityRecords = Get-PaylocityEmployees
     $(
@@ -145,7 +123,8 @@ function Get-DepartmentNiceName {
     )
     
     if (-not $Script:PaylocityDepartmentsWithNiceNames) {
-        $Script:PaylocityDepartmentsWithNiceNames = Get-Content -Path $(Get-PaylocityDepartmentsWithNiceNamesJsonPath) | 
+        $Path = "$(Get-PaylocityDataExportPath)\Configuration\PaylocityDepartmentsWithNiceNames.json"
+        $Script:PaylocityDepartmentsWithNiceNames = Get-Content -Path $Path | 
         ConvertFrom-Json
     }
 
