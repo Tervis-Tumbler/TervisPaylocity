@@ -187,13 +187,10 @@ filter Add-PaylocityReportDetailsCustomMembers {
 
 function Get-AllActiveEmployeesWithTheirTervisEmailAddress {
     $ActiveEmployees = Get-PaylocityEmployees -Status A    
-    $ADusersOfActivePaylocityUsers = Get-PaylocityADUser -Status A
 
-    Import-TervisOffice365ExchangePSSession
-    $Mailboxes = Get-O365Mailbox
-    
-    $ADUsersWithMailboxes = $ADusersOfActivePaylocityUsers |
-    where UserPrincipalName -In $Mailboxes.UserPrincipalName
+    $ADUsersWithMailboxes = $ADUsers = Get-TervisADUser -Filter * -IncludeMailboxProperties -IncludePaylocityEmployee |
+    Where-Object -FilterScript {$_.PaylocityEmployee.Status -eq "A"} |
+    Where-Object -FilterScript {$_.O365Mailbox}
 
     $ActiveEmployees | Add-Member -MemberType ScriptProperty -Name EmailAddress -Force -Value {
         $ADUsersWithMailboxes | 
