@@ -16,24 +16,24 @@ function Get-PaylocityEmployees {
 
         $PaylocityDataExportPath = Get-PaylocityDataExportPath
 
-        $MostRecentPaylocityDataExport = Get-ChildItem -File $PaylocityDataExportPath | sort -Property CreationTime -Descending | select -First 1
+        $MostRecentPaylocityDataExport = Get-ChildItem -File $PaylocityDataExportPath -Recurse | sort -Property CreationTime -Descending | select -First 1
         [xml]$Content = Get-Content $MostRecentPaylocityDataExport.FullName
         $Details = $Content.Report.CustomReportTable.Detail_Collection.Detail
 
         $PaylocityEmployees = ForEach ($Detail in $Details) {
             [pscustomobject][ordered]@{
-                Organization = $Detail.col10 | ConvertTo-TitleCase
-                State = $Detail.col9
-                Status = $Detail.col8
-                DepartmentName = $Detail.col7
-                DepartmentCode = $Detail.col6
-                JobTitle = $Detail.col5 | ConvertTo-TitleCase
-                ManagerEmployeeID = $Detail.col4
-                ManagerName = $Detail.col3 | ConvertTo-TitleCase
-                Surname = $Detail.col2 | ConvertTo-TitleCase
-                GivenName = $Detail.col1 | ConvertTo-TitleCase
-                EmployeeID = $Detail.col0
-                TerminationDate = if ($Detail.col11) {Get-Date $Detail.col11}
+                Organization = $Detail.LocationCurrent | ConvertTo-TitleCase
+                State = $Detail.State
+                Status = $Detail.EmployeeStatusCurrent
+                DepartmentName = $Detail.DepartmentNameCurrent
+                DepartmentCode = $Detail.DepartmentCodeCurrent
+                JobTitle = $Detail.JobTitleCurrent | ConvertTo-TitleCase
+                ManagerEmployeeID = $Detail.SupervisorEmployeeIDCurrent
+                ManagerName = $Detail.SupervisorCurrent | ConvertTo-TitleCase
+                Surname = $Detail.LastName | ConvertTo-TitleCase
+                GivenName = $Detail.FirstName | ConvertTo-TitleCase
+                EmployeeID = $Detail.EmployeeID
+                TerminationDate = if ($Detail.TerminationDateCurrent) {Get-Date $Detail.TerminationDateCurrent}
             } |
             Add-Member -MemberType ScriptProperty -Name DepartmentNiceName -PassThru -Value {
                 Get-DepartmentNiceName -PaylocityDepartmentName $this.DepartmentName
